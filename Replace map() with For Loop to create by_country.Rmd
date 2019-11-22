@@ -1,0 +1,68 @@
+---
+title: "Replace map() with For Loop to create by_country"
+Author: Zhang, Peng
+output: 
+  pdf_document: default
+  html_notebook:
+      df_print: paged
+  github_document:
+    default
+---
+
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(error = TRUE)
+```
+
+
+```{r setup, include = FALSE}
+library("tidyverse")
+library(modelr)
+library(gapminder)
+```
+
+## Introduce 
+
+In textbook <R for Data Science>(Authors:Garrett Grolemund and Hadley Wickham ,https://r4ds.had.co.nz/), there is a data frame named by_country(refer to 25.2.2 List-columns). Authors used function map() to create the data frame which includes column model presenting lifeExp~year models for each country.
+
+Let's find a way to replace map with for loop to create by_country.
+
+## code
+
+
+
+```{r}
+by_country <- gapminder %>% 
+  group_by(country, continent) %>% 
+  nest()
+by_country$data[[1]]
+```
+```{r}
+country_model <- function(df) {
+  lm(lifeExp ~ year, data = df)
+}
+```
+
+
+
+
+```{r}
+
+# this is original code in textbook:models <- map(by_country$data, country_model)
+models <- function(df) {
+  out <- vector("list",length(df))
+  for (i in seq_along(df)) {
+    out[[i]] <- country_model(df[[i]])
+  }
+  out
+}
+```
+
+
+
+```{r}
+by_country <- by_country %>% 
+  mutate(model = models(data))
+by_country
+```
+
